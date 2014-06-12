@@ -122,7 +122,8 @@ if (cluster.isMaster) {
 	
 	// Here you might use middleware, attach routes, etc.
 
-	var server = app.listen(),
+	// Don't expose our internal server to the outside.
+	var server = app.listen(0, 'localhost'),
 		io = sio(server);
 	
 	// Tell Socket.IO to use the redis adapter. By default, the redis
