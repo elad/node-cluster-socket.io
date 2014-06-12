@@ -30,9 +30,7 @@ Say your server runs on port 3000:
 ```
 var express = require('express'),
     cluster = require('cluster'),
-    net = require('net'),
-    sio = require('socket.io'),
-    sio_redis = require('socket.io-redis');
+    sio = require('socket.io');
 
 var port = 3000,
     num_processes = require('os').cpus().length;
