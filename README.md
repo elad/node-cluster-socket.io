@@ -146,3 +146,37 @@ if (cluster.isMaster) {
 ```
 
 That should do it. Please let me know if this doesn't work or if you have any comments.
+
+#### Benchmarks
+
+There's a script you can run to test the various hashing functions. It generates a million random IP addresses and then hashes them using each of four hashing algorithms to get a consistent IP address -> array index mapping. 
+
+The time it took is printed in milliseconds (less is better) and distribution of IP addresses to array index is printed (more equal distribution the better).
+
+To run:
+
+```
+$ node benchmark <num_workers>
+```
+
+Here's output from my machine:
+
+```
+$ node benchmark 4
+benchmarking int31...
+  time (ms): 2843
+  scatter: { '0': 249874, '1': 250316, '2': 250262, '3': 249548 }
+benchmarking numeric_real...
+  time (ms): 1376
+  scatter: { '0': 248996, '1': 250847, '2': 251073, '3': 249084 }
+benchmarking simple_regex...
+  time (ms): 849
+  scatter: { '0': 247866, '1': 249106, '2': 252203, '3': 250825 }
+benchmarking simple_loop...
+  time (ms): 775
+  scatter: { '0': 247866, '1': 249106, '2': 252203, '3': 250825 }
+$
+
+```
+
+The algorithm used in the example above is "simple_loop."
