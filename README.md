@@ -111,7 +111,7 @@ if (cluster.isMaster) {
 		// We received a connection and need to pass it to the appropriate
 		// worker. Get the worker for this connection's source IP and pass
 		// it the connection.
-		var worker = workers[worker_index(c.remoteAddress, num_processes)];
+		var worker = workers[worker_index(connection.remoteAddress, num_processes)];
 		worker.send('sticky-session:connection', connection);
 	}).listen(port);
 } else {
