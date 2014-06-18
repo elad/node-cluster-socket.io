@@ -27,7 +27,7 @@ I use Node.js + Express.js + Socket.IO + cluster intentionally to show how it wo
 
 Say your server runs on port 3000:
 
-```
+```js
 var express = require('express'),
     cluster = require('cluster'),
     sio = require('socket.io');
@@ -55,7 +55,7 @@ Instead of starting the node.js server on that port and listening in each worker
 
 The way to do this is to create a single server listening on port 3000 and consistently map source IP addresses to our workers. We then pass the connection to the worker, which emits a `connection` event on its server. Processing then proceeds as normal:
 
-```
+```js
 var express = require('express'),
     cluster = require('cluster'),
     net = require('net'),
