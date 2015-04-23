@@ -10,7 +10,7 @@ I use Node.js + Express.js + Socket.IO + cluster intentionally to show how it wo
 #### Assumptions:
 
   * Socket.IO 1.0 or above - so we can use the adapter API
-  * Node.js 0.10.27 or above - a file descriptor passing fix is included in this release
+  * Node.js 0.12 or above - for [pauseOnConnect](https://github.com/joyent/node/commit/c2b4f4809b8c30537b08f2dc76f798ea7a225907)
   * Redis
   * [socket.io-redis adapter](https://github.com/automattic/socket.io-redis):
   
@@ -53,7 +53,8 @@ if (cluster.isMaster) {
 
 Instead of starting the node.js server on that port and listening in each worker, we need to introduce a tiny proxy layer to make sure that connections from the same host end up in the same worker.
 
-The way to do this is to create a single server listening on port 3000 and consistently map source IP addresses to our workers. We then pass the connection to the worker, which emits a `connection` event on its server. Processing then proceeds as normal:
+The way to do this is to create a single server listening on port 3000 and consistently map source IP addresses to our workers. We then pass the connection to the worker, which emits a `connection` event on its server.
+To prevent data loss where data is sent on the connection before it has been passed to the worker, the server sets the `pauseOnConnect` option. That way, connections are paused immediately and workers can `.resume()` them to receive data when they're ready. Processing then proceeds as normal:
 
 ```js
 var express = require('express'),
@@ -107,7 +108,7 @@ if (cluster.isMaster) {
 	};
 	
 	// Create the outside facing server listening on our port.
-	var server = net.createServer(function(connection) {
+	var server = net.createServer({ pauseOnConnect: true }, function(connection) {
 		// We received a connection and need to pass it to the appropriate
 		// worker. Get the worker for this connection's source IP and pass
 		// it the connection.
@@ -122,7 +123,7 @@ if (cluster.isMaster) {
 
 	// Don't expose our internal server to the outside.
 	var server = app.listen(0, 'localhost'),
-		io = sio(server);
+	    io = sio(server);
 	
 	// Tell Socket.IO to use the redis adapter. By default, the redis
 	// server is assumed to be on localhost:6379. You don't have to
@@ -140,6 +141,8 @@ if (cluster.isMaster) {
 		// Emulate a connection event on the server by emitting the
 		// event with the connection the master sent us.
 		server.emit('connection', connection);
+		
+		connection.resume();
 	});
 }
 ```
