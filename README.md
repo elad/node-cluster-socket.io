@@ -99,7 +99,7 @@ if (cluster.isMaster) {
 	var worker_index = function(ip, len) {
 		var s = '';
 		for (var i = 0, _len = ip.length; i < _len; i++) {
-			if (ip[i] !== '.') {
+			if (!isNaN(ip[1]) {
 				s += ip[i];
 			}
 		}
