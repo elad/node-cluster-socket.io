@@ -13,7 +13,7 @@ I use Node.js + Express.js + Socket.IO + cluster intentionally to show how it wo
   * Node.js 0.12 or above - for [pauseOnConnect](https://github.com/joyent/node/commit/c2b4f4809b8c30537b08f2dc76f798ea7a225907)
   * Redis
   * [socket.io-redis adapter](https://github.com/automattic/socket.io-redis):
-  
+
 	```
 	$ npm install socket.io-redis
 	```
@@ -41,12 +41,12 @@ if (cluster.isMaster) {
 	}
 } else {
 	var app = new express();
-	
+
 	// Here you might use middleware, attach routes, etc.
-	
+
 	var server = app.listen(port),
 	    io = sio(server);
-	    
+
 	// Here you might use Socket.IO middleware for authorization etc.
 }
 ```
@@ -71,7 +71,7 @@ if (cluster.isMaster) {
 	// them based on source IP address. It's also useful for auto-restart,
 	// for example.
 	var workers = [];
-	
+
 	// Helper function for spawning worker at index 'i'.
 	var spawn = function(i) {
 		workers[i] = cluster.fork();
@@ -82,16 +82,16 @@ if (cluster.isMaster) {
 			spawn(i);
 		});
     };
-    
+
     // Spawn workers.
 	for (var i = 0; i < num_processes; i++) {
 		spawn(i);
 	}
-	
+
 	// Helper function for getting a worker index based on IP address.
 	// This is a hot path so it should be really fast. The way it works
-	// is by converting the IP address to a number by removing the dots,
-	// then compressing it to the number of slots we have.
+	// is by converting the IP address to a number by removing non numeric
+  // characters, then compressing it to the number of slots we have.
 	//
 	// Compared against "real" hashing (from the sticky-session code) and
 	// "real" IP number conversion, this function is on par in terms of
@@ -99,14 +99,14 @@ if (cluster.isMaster) {
 	var worker_index = function(ip, len) {
 		var s = '';
 		for (var i = 0, _len = ip.length; i < _len; i++) {
-			if (ip[i] !== '.') {
+			if (!isNaN(ip[i])) {
 				s += ip[i];
 			}
 		}
 
 		return Number(s) % len;
 	};
-	
+
 	// Create the outside facing server listening on our port.
 	var server = net.createServer({ pauseOnConnect: true }, function(connection) {
 		// We received a connection and need to pass it to the appropriate
@@ -118,13 +118,13 @@ if (cluster.isMaster) {
 } else {
     // Note we don't use a port here because the master listens on it for us.
 	var app = new express();
-	
+
 	// Here you might use middleware, attach routes, etc.
 
 	// Don't expose our internal server to the outside.
 	var server = app.listen(0, 'localhost'),
 	    io = sio(server);
-	
+
 	// Tell Socket.IO to use the redis adapter. By default, the redis
 	// server is assumed to be on localhost:6379. You don't have to
 	// specify them explicitly unless you want to change them.
@@ -137,11 +137,11 @@ if (cluster.isMaster) {
 		if (message !== 'sticky-session:connection') {
 			return;
 		}
-		
+
 		// Emulate a connection event on the server by emitting the
 		// event with the connection the master sent us.
 		server.emit('connection', connection);
-		
+
 		connection.resume();
 	});
 }
@@ -151,7 +151,7 @@ That should do it. Please let me know if this doesn't work or if you have any co
 
 #### Benchmarks
 
-There's a script you can run to test the various hashing functions. It generates a million random IP addresses and then hashes them using each of four hashing algorithms to get a consistent IP address -> array index mapping. 
+There's a script you can run to test the various hashing functions. It generates a million random IP addresses and then hashes them using each of four hashing algorithms to get a consistent IP address -> array index mapping.
 
 The time it took is printed in milliseconds (less is better) and distribution of IP addresses to array index is printed (more equal distribution the better).
 
@@ -166,17 +166,17 @@ Here's output from my machine:
 ```
 $ node benchmark 4
 benchmarking int31...
-  time (ms): 2843
-  scatter: { '0': 249874, '1': 250316, '2': 250262, '3': 249548 }
+  time (ms): 1827
+  scatter: { '0': 249998, '1': 250522, '2': 250015, '3': 249465 }
 benchmarking numeric_real...
-  time (ms): 1376
-  scatter: { '0': 248996, '1': 250847, '2': 251073, '3': 249084 }
+  time (ms): 812
+  scatter: { '0': 249360, '1': 251027, '2': 250704, '3': 248909 }
 benchmarking simple_regex...
-  time (ms): 849
-  scatter: { '0': 247866, '1': 249106, '2': 252203, '3': 250825 }
+  time (ms): 480
+  scatter: { '0': 248367, '1': 249034, '2': 251697, '3': 250902 }
 benchmarking simple_loop...
-  time (ms): 775
-  scatter: { '0': 247866, '1': 249106, '2': 252203, '3': 250825 }
+  time (ms): 911
+  scatter: { '0': 248367, '1': 249034, '2': 251697, '3': 250902 }
 $
 
 ```
