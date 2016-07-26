@@ -40,7 +40,7 @@ function hash_simple_regex(ip) {
 function hash_simple_loop(ip) {
 	var s = '';
 	for (var i = 0, _len = ip.length; i < _len; i++) {
-		if (ip[i] !== '.') {
+		if (!isNaN(ip[i])) {
 			s += ip[i];
 		}
 	}
@@ -52,7 +52,7 @@ var num_ips = 1000000,
     ips = [];
 for (var i = 0; i < num_ips; i++) {
 	ips[i] = random_ip();
-}    
+}
 
 // How many slots are available to us.
 var len = parseInt(process.argv[2]);
