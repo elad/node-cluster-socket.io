@@ -77,7 +77,7 @@ if (cluster.isMaster) {
 		workers[i] = cluster.fork();
 
 		// Optional: Restart worker on exit
-		workers[i].on('exit', function(worker, code, signal) {
+		workers[i].on('exit', function(code, signal) {
 			console.log('respawning worker', i);
 			spawn(i);
 		});
