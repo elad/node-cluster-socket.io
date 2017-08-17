@@ -61,7 +61,8 @@ var express = require('express'),
     cluster = require('cluster'),
     net = require('net'),
     sio = require('socket.io'),
-    sio_redis = require('socket.io-redis');
+    sio_redis = require('socket.io-redis'),
+    farmhash = require('farmhash');
 
 var port = 3000,
     num_processes = require('os').cpus().length;
