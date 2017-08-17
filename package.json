@@ -1,0 +1,12 @@
+{
+  "name": "cluster-socket.io",
+  "main": "benchmark.js",
+  "dependencies": {
+    "farmhash": "^2.0.0",
+    "random-ipv6": "^1.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node benchmark.js"
+  }
+}
