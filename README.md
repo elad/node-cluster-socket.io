@@ -61,7 +61,8 @@ var express = require('express'),
     cluster = require('cluster'),
     net = require('net'),
     sio = require('socket.io'),
-    sio_redis = require('socket.io-redis');
+    sio_redis = require('socket.io-redis'),
+    farmhash = require('farmhash');
 
 var port = 3000,
     num_processes = require('os').cpus().length;
@@ -97,14 +98,7 @@ if (cluster.isMaster) {
 	// "real" IP number conversion, this function is on par in terms of
 	// worker index distribution only much faster.
 	var worker_index = function(ip, len) {
-		var s = '';
-		for (var i = 0, _len = ip.length; i < _len; i++) {
-			if (!isNaN(ip[i])) {
-				s += ip[i];
-			}
-		}
-
-		return Number(s) % len;
+		return farmhash.fingerprint32(ip[i]) % len; // Farmhash is the fastest and works with IPv6, too
 	};
 
 	// Create the outside facing server listening on our port.
@@ -165,18 +159,43 @@ Here's output from my machine:
 
 ```
 $ node benchmark 4
+IPv4
+----------
 benchmarking int31...
-  time (ms): 1827
-  scatter: { '0': 249998, '1': 250522, '2': 250015, '3': 249465 }
+  time (ms): 874
+  scatter: { '0': 249145, '1': 250189, '2': 249969, '3': 250697 }
 benchmarking numeric_real...
-  time (ms): 812
-  scatter: { '0': 249360, '1': 251027, '2': 250704, '3': 248909 }
+  time (ms): 441
+  scatter: { '0': 249084, '1': 251221, '2': 250609, '3': 249086 }
 benchmarking simple_regex...
-  time (ms): 480
-  scatter: { '0': 248367, '1': 249034, '2': 251697, '3': 250902 }
+  time (ms): 281
+  scatter: { '0': 247994, '1': 249241, '2': 251699, '3': 251066 }
 benchmarking simple_loop...
-  time (ms): 911
-  scatter: { '0': 248367, '1': 249034, '2': 251697, '3': 250902 }
+  time (ms): 559
+  scatter: { '0': 247994, '1': 249241, '2': 251699, '3': 251066 }
+benchmarking farmhash...
+  time (ms): 234
+  scatter: { '0': 249192, '1': 250640, '2': 250570, '3': 249598 }
+
+
+IPv6
+----------
+benchmarking int31...
+  time (ms): 418
+  scatter: { '0': 543029, '1': 143286, '2': 141239, '3': 172446 }
+benchmarking numeric_real...
+  time (ms): 821
+  scatter: { NaN: 1000000 }
+benchmarking simple_regex...
+  time (ms): 714
+  scatter: { NaN: 1000000 }
+benchmarking simple_loop...
+  time (ms): 1261
+  scatter: { '0': 890953, '1': 34728, '2': 38949, '3': 35370 }
+benchmarking farmhash...
+  time (ms): 314
+  scatter: { '0': 249034, '1': 250866, '2': 249923, '3': 250177 }
+
 $
 
 ```
