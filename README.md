@@ -98,7 +98,7 @@ if (cluster.isMaster) {
 	// "real" IP number conversion, this function is on par in terms of
 	// worker index distribution only much faster.
 	var worker_index = function(ip, len) {
-		return farmhash.fingerprint32(ip[i]) % len; // Farmhash is the fastest and works with IPv6, too
+		return farmhash.fingerprint32(ip) % len; // Farmhash is the fastest and works with IPv6, too
 	};
 
 	// Create the outside facing server listening on our port.
